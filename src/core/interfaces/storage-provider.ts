@@ -54,17 +54,25 @@ export interface StorageProvider {
   readonly name: string;
 
   /**
-   * List objects in a container/bucket
+   * List objects in storage
+   * @param container - S3 bucket name or filesystem directory path
+   * @param options - List options
    */
   listObjects(container: string, options?: ListObjectsOptions): Promise<StorageObject[]>;
 
   /**
    * Get an object as a readable stream
+   * @param container - S3 bucket name or filesystem directory path
+   * @param key - Object key or file path
    */
   getObjectStream(container: string, key: string): Promise<Readable>;
 
   /**
    * Upload an object from a readable stream
+   * @param container - S3 bucket name or filesystem directory path
+   * @param key - Object key or file path
+   * @param stream - Readable stream
+   * @param options - Upload options
    */
   uploadObject(
     container: string,
@@ -75,21 +83,30 @@ export interface StorageProvider {
 
   /**
    * Delete an object
+   * @param container - S3 bucket name or filesystem directory path
+   * @param key - Object key or file path
    */
   deleteObject(container: string, key: string): Promise<void>;
 
   /**
    * Check if an object exists
+   * @param container - S3 bucket name or filesystem directory path
+   * @param key - Object key or file path
    */
   objectExists(container: string, key: string): Promise<boolean>;
 
   /**
-   * Get a URL to access the object (signed URL for S3, file path for filesystem)
+   * Get a URL to access the object
+   * @param container - S3 bucket name or filesystem directory path
+   * @param key - Object key or file path
+   * @param options - URL generation options
+   * @returns Signed URL for S3, file:// URL for filesystem
    */
   getObjectUrl(container: string, key: string, options?: GetUrlOptions): Promise<string>;
 
   /**
-   * Create a container/bucket if it doesn't exist
+   * Create storage location if it doesn't exist
+   * @param container - S3 bucket name or filesystem directory path
    */
   createContainer(container: string): Promise<void>;
 }

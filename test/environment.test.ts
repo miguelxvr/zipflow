@@ -7,9 +7,8 @@ describe('Environment Configuration', () => {
 
   beforeEach(() => {
     // Set required environment variables for tests
-    process.env.SOURCE_CONTAINER = 'test-source';
-    process.env.TARGET_CONTAINER = 'test-target';
-    process.env.TARGET_KEY = 'test/output.zip';
+    process.env.SOURCE_URI = 's3://test-source/data/';
+    process.env.TARGET_URI = 's3://test-target/output.zip';
   });
 
   afterEach(() => {
@@ -18,19 +17,24 @@ describe('Environment Configuration', () => {
   });
 
   describe('getConfig', () => {
-    it('should return valid configuration with required env vars', () => {
+    it('should return valid configuration with required URI env vars', () => {
       const config = getConfig();
 
-      expect(config).toHaveProperty('provider');
+      expect(config).toHaveProperty('source');
+      expect(config).toHaveProperty('target');
       expect(config).toHaveProperty('aws');
-      expect(config).toHaveProperty('filesystem');
-      expect(config).toHaveProperty('storage');
       expect(config).toHaveProperty('compression');
       expect(config).toHaveProperty('upload');
 
-      expect(config.storage.sourceContainer).toBe('test-source');
-      expect(config.storage.targetContainer).toBe('test-target');
-      expect(config.storage.targetKey).toBe('test/output.zip');
+      expect(config.source.uri).toBe('s3://test-source/data/');
+      expect(config.source.scheme).toBe('s3');
+      expect(config.source.bucket).toBe('test-source');
+      expect(config.source.path).toBe('data/');
+
+      expect(config.target.uri).toBe('s3://test-target/output.zip');
+      expect(config.target.scheme).toBe('s3');
+      expect(config.target.bucket).toBe('test-target');
+      expect(config.target.path).toBe('output.zip');
     });
 
     it('should use default values for optional env vars', () => {
@@ -42,9 +46,31 @@ describe('Environment Configuration', () => {
     });
 
     it('should throw ConfigurationError when required env var is missing', () => {
-      process.env.SOURCE_CONTAINER = undefined;
+      process.env.SOURCE_URI = undefined;
 
       expect(() => getConfig()).toThrow(ConfigurationError);
+    });
+
+    it('should throw ConfigurationError when source and target schemes differ', () => {
+      process.env.SOURCE_URI = 's3://bucket/path';
+      process.env.TARGET_URI = 'file://./output.zip';
+
+      expect(() => getConfig()).toThrow(ConfigurationError);
+      expect(() => getConfig()).toThrow(/same storage type/);
+    });
+
+    it('should parse file:// URIs correctly', () => {
+      process.env.SOURCE_URI = 'file://./storage/input';
+      process.env.TARGET_URI = 'file://./storage/output/archive.zip';
+
+      const config = getConfig();
+
+      expect(config.source.scheme).toBe('file');
+      expect(config.source.path).toBe('./storage/input');
+      expect(config.source.bucket).toBeUndefined();
+
+      expect(config.target.scheme).toBe('file');
+      expect(config.target.path).toBe('./storage/output/archive.zip');
     });
 
     it('should parse boolean environment variables correctly', () => {
@@ -67,16 +93,16 @@ describe('Environment Configuration', () => {
   describe('getConfigWithOverrides', () => {
     it('should merge overrides with base config', () => {
       const config = getConfigWithOverrides({
-        storage: {
-          sourceContainer: 'override-source',
-          sourcePrefix: 'override-prefix/',
-          targetContainer: 'test-target',
-          targetKey: 'test/output.zip',
+        source: {
+          uri: 's3://override-source/data/',
+          scheme: 's3',
+          bucket: 'override-source',
+          path: 'data/',
         },
       });
 
-      expect(config.storage.sourceContainer).toBe('override-source');
-      expect(config.storage.sourcePrefix).toBe('override-prefix/');
+      expect(config.source.uri).toBe('s3://override-source/data/');
+      expect(config.source.bucket).toBe('override-source');
     });
 
     it('should preserve non-overridden values', () => {
@@ -87,7 +113,7 @@ describe('Environment Configuration', () => {
       });
 
       expect(config.compression.level).toBe(5);
-      expect(config.storage.sourceContainer).toBe('test-source');
+      expect(config.source.uri).toBe('s3://test-source/data/');
     });
   });
 });

@@ -20,15 +20,25 @@ Globals:
         AWS_REGION: !Ref AWS::Region
 
 Parameters:
-  SourceBucket:
+  SourceUri:
     Type: String
-    Description: Default source S3 bucket name
-    Default: ''
+    Description: Source URI (e.g., s3://bucket/path/)
+    Default: s3://my-source-bucket/data/
 
-  TargetBucket:
+  TargetUri:
     Type: String
-    Description: Default target S3 bucket name
-    Default: ''
+    Description: Target URI (e.g., s3://bucket/path/archive.zip)
+    Default: s3://my-target-bucket/archives/archive.zip
+
+  SourceBucketName:
+    Type: String
+    Description: Source bucket name for IAM permissions
+    Default: my-source-bucket
+
+  TargetBucketName:
+    Type: String
+    Description: Target bucket name for IAM permissions
+    Default: my-target-bucket
 
 Resources:
   ZipflowFunction:
@@ -36,22 +46,20 @@ Resources:
     Properties:
       CodeUri: ./
       Handler: dist/handlers/lambda.handler
-      Description: Archives S3 files into a compressed ZIP file
+      Description: Archives S3 files into a compressed ZIP file using URI-based configuration
       Environment:
         Variables:
-          SOURCE_BUCKET: !Ref SourceBucket
-          SOURCE_PREFIX: ''
-          TARGET_BUCKET: !Ref TargetBucket
-          TARGET_KEY: archives/archive.zip
+          SOURCE_URI: !Ref SourceUri
+          TARGET_URI: !Ref TargetUri
           COMPRESSION_LEVEL: '9'
           UPLOAD_PART_SIZE: '5242880'
           UPLOAD_QUEUE_SIZE: '1'
           UPLOAD_TIMEOUT: '3600000'
       Policies:
         - S3ReadPolicy:
-            BucketName: !Ref SourceBucket
+            BucketName: !Ref SourceBucketName
         - S3CrudPolicy:
-            BucketName: !Ref TargetBucket
+            BucketName: !Ref TargetBucketName
       Events:
         # API Gateway endpoint for manual invocation
         ArchiveApi:

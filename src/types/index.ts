@@ -10,17 +10,6 @@ export interface ArchiverConfig {
 }
 
 /**
- * @deprecated Use ArchiverConfig with sourceContainer/targetContainer
- */
-export interface LegacyArchiverConfig {
-  sourceBucket: string;
-  sourcePrefix: string;
-  targetBucket: string;
-  targetKey: string;
-  compressionLevel?: number;
-}
-
-/**
  * Options for S3 upload operations
  */
 export interface S3UploadOptions {
