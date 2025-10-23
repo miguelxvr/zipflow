@@ -50,91 +50,24 @@ The archiver uses Node.js streams to process files without loading them entirely
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 22+
-- pnpm 9+
-
-### Setup
-
 ```bash
-# 1. Clone the repository
-git clone https://github.com/miguelxvr/zipflow.git
-cd zipflow
-
-# 2. Install dependencies
+# 1. Install dependencies
 pnpm install
 
-# 3. Build the application
-pnpm build
-
-# 4. Copy and configure environment
+# 2. Configure environment
 cp .env.example .env
-nano .env  # Edit with your configuration
-```
+nano .env  # Uncomment and customize one of the examples
 
-### Example: Filesystem Provider
-
-For local testing without AWS:
-
-```bash
-# Create test directories and files
-mkdir -p storage/input storage/output
-echo "Test data" > storage/input/test.txt
-
-# Configure .env
-cat > .env << 'EOF'
-STORAGE_PROVIDER=filesystem
-FILESYSTEM_BASE_DIR=./storage
-SOURCE_CONTAINER=input
-TARGET_CONTAINER=output
-TARGET_KEY=archive.zip
-COMPRESSION_LEVEL=9
-EOF
-
-# Run the archiver
+# 3. Run
 pnpm start
-
-# Verify the result
-ls -lh storage/output/archive.zip
-unzip -l storage/output/archive.zip
 ```
 
-### Example: MinIO (Local S3)
+That's it! The `.env.example` file contains three ready-to-use configurations:
+- **Filesystem** - Local testing, no AWS needed
+- **AWS S3** - Production deployment
+- **MinIO** - Local S3 testing with Docker
 
-For testing S3 functionality locally:
-
-```bash
-# Start MinIO
-docker compose up -d
-
-# Upload test files
-docker run --rm --network zipflow_s3-network \
-  -v "$(pwd)/storage/input:/data" \
-  --entrypoint=/bin/sh minio/mc:latest -c \
-  'mc alias set minio http://minio:9000 minioadmin minioadmin && \
-   mc cp /data/test.txt minio/test-bucket/data/test.txt'
-
-# Configure .env for MinIO
-cat > .env << 'EOF'
-STORAGE_PROVIDER=s3
-AWS_ENDPOINT_URL=http://localhost:9000
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_REGION=us-east-1
-S3_FORCE_PATH_STYLE=true
-SOURCE_CONTAINER=test-bucket
-SOURCE_PREFIX=data/
-TARGET_CONTAINER=test-bucket
-TARGET_KEY=archives/result.zip
-COMPRESSION_LEVEL=9
-EOF
-
-# Run the archiver
-pnpm start
-
-# Access MinIO Console at http://localhost:9001
-```
+Just uncomment the example you want and customize the values.
 
 ## Configuration
 
@@ -183,8 +116,8 @@ TARGET_KEY=archive.zip
 ## Scripts
 
 ```bash
-pnpm build         # Build TypeScript
-pnpm start         # Run CLI
+pnpm start         # Build and run CLI
+pnpm build         # Build TypeScript only
 pnpm test          # Run tests
 pnpm lint          # Lint code
 pnpm format        # Format code
