@@ -4,6 +4,13 @@
   "description": "Multi-provider streaming archiver - compress files from S3 or filesystem into ZIP",
   "type": "module",
   "main": "dist/handlers/cli.js",
+  "bin": {
+    "zipflow": "dist/handlers/cli.js"
+  },
+  "exports": {
+    ".": "./dist/handlers/cli.js"
+  },
+  "files": ["dist", "LICENSE", "README.md"],
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
@@ -20,11 +27,19 @@
     "format": "biome format --write .",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist node_modules",
-    "prepare": "pnpm build"
+    "prepublishOnly": "pnpm build"
   },
   "keywords": ["aws", "s3", "lambda", "compression", "archive", "zip", "stream"],
   "author": "MX",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miguelxvr/zipflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/miguelxvr/zipflow/issues"
+  },
+  "homepage": "https://github.com/miguelxvr/zipflow#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.705.0",
     "@aws-sdk/lib-storage": "^3.705.0",
