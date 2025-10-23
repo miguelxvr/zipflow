@@ -1,0 +1,72 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "ignore": ["node_modules", "dist", ".aws-sam", "*.log"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noExtraBooleanCast": "error",
+        "noMultipleSpacesInRegularExpressionLiterals": "error",
+        "noUselessCatch": "error",
+        "noUselessConstructor": "error",
+        "noUselessLabel": "error",
+        "noWith": "error"
+      },
+      "correctness": {
+        "noConstAssign": "error",
+        "noConstantCondition": "error",
+        "noEmptyPattern": "error",
+        "noGlobalObjectCalls": "error",
+        "noInvalidConstructorSuper": "error",
+        "noNewSymbol": "error",
+        "noUnreachable": "error",
+        "noUnreachableSuper": "error",
+        "noUnsafeOptionalChaining": "error",
+        "useIsNan": "error"
+      },
+      "style": {
+        "noNegationElse": "off",
+        "useConst": "error",
+        "useTemplate": "warn"
+      },
+      "suspicious": {
+        "noAsyncPromiseExecutor": "error",
+        "noCatchAssign": "error",
+        "noClassAssign": "error",
+        "noCompareNegZero": "error",
+        "noDebugger": "error",
+        "noDuplicateCase": "error",
+        "noDuplicateClassMembers": "error",
+        "noDuplicateObjectKeys": "error",
+        "noExplicitAny": "warn",
+        "noFallthroughSwitchClause": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  }
+}

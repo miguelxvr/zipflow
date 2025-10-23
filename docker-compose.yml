@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MinIO - S3 compatible storage for local testing
+  minio:
+    image: minio/minio:latest
+    container_name: s3-compress-minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ':9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - s3-network
+
+  # MinIO setup - creates initial buckets
+  minio-setup:
+    image: minio/mc:latest
+    container_name: s3-compress-minio-setup
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb local/test-bucket --ignore-existing;
+      /usr/bin/mc mb local/source-bucket --ignore-existing;
+      /usr/bin/mc mb local/target-bucket --ignore-existing;
+      echo 'Buckets created successfully';
+      exit 0;
+      "
+    networks:
+      - s3-network
+
+  # S3 Compress CLI application
+  app:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.cli
+    container_name: zipflow-app
+    environment:
+      # AWS Configuration
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - S3_FORCE_PATH_STYLE=true
+      # S3 Configuration
+      - SOURCE_BUCKET=test-bucket
+      - SOURCE_PREFIX=data/test/
+      - TARGET_BUCKET=test-bucket
+      - TARGET_KEY=archives/test-archive.zip
+      # Compression
+      - COMPRESSION_LEVEL=9
+      # Upload Configuration
+      - UPLOAD_PART_SIZE=5242880
+      - UPLOAD_QUEUE_SIZE=1
+      - UPLOAD_TIMEOUT=3600000
+      # Node Environment
+      - NODE_ENV=development
+    depends_on:
+      - minio
+      - minio-setup
+    networks:
+      - s3-network
+    # Uncomment to keep container running for debugging
+    # command: tail -f /dev/null
+
+volumes:
+  minio-data:
+    driver: local
+
+networks:
+  s3-network:
+    driver: bridge

@@ -1,0 +1,46 @@
+{
+  "name": "zipflow",
+  "version": "2.0.0",
+  "description": "Multi-provider streaming archiver - compress files from S3 or filesystem into ZIP",
+  "type": "module",
+  "main": "dist/handlers/cli.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "tsx src/handlers/cli.ts",
+    "build": "tsc",
+    "start": "node dist/handlers/cli.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules",
+    "prepare": "pnpm build"
+  },
+  "keywords": ["aws", "s3", "lambda", "compression", "archive", "zip", "stream"],
+  "author": "MX",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.705.0",
+    "@aws-sdk/lib-storage": "^3.705.0",
+    "@aws-sdk/s3-request-presigner": "^3.705.0",
+    "archiver": "^7.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/archiver": "^6.0.2",
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.1",
+    "aws-sdk-client-mock": "^4.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@9.14.4"
+}

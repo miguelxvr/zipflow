@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# AWS
+.aws-sam/
+samconfig.toml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+.docker/data/
+
+# MinIO data
+minio-data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Results
+results/
+output/

@@ -1,0 +1,7 @@
+{
+  "sourceBucket": "test-bucket",
+  "sourcePrefix": "data/test/",
+  "targetBucket": "test-bucket",
+  "targetKey": "archives/test-archive.zip",
+  "compressionLevel": 9
+}

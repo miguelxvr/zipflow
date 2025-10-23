@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  zipflow - Multi-provider streaming archiver
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 2048
+    Runtime: nodejs22.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_ENV: production
+        AWS_REGION: !Ref AWS::Region
+
+Parameters:
+  SourceBucket:
+    Type: String
+    Description: Default source S3 bucket name
+    Default: ''
+
+  TargetBucket:
+    Type: String
+    Description: Default target S3 bucket name
+    Default: ''
+
+Resources:
+  ZipflowFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/lambda.handler
+      Description: Archives S3 files into a compressed ZIP file
+      Environment:
+        Variables:
+          SOURCE_BUCKET: !Ref SourceBucket
+          SOURCE_PREFIX: ''
+          TARGET_BUCKET: !Ref TargetBucket
+          TARGET_KEY: archives/archive.zip
+          COMPRESSION_LEVEL: '9'
+          UPLOAD_PART_SIZE: '5242880'
+          UPLOAD_QUEUE_SIZE: '1'
+          UPLOAD_TIMEOUT: '3600000'
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref SourceBucket
+        - S3CrudPolicy:
+            BucketName: !Ref TargetBucket
+      Events:
+        # API Gateway endpoint for manual invocation
+        ArchiveApi:
+          Type: Api
+          Properties:
+            Path: /archive
+            Method: post
+            RestApiId: !Ref S3CompressApi
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: false
+        EntryPoints:
+          - src/handlers/lambda.ts
+        External:
+          - '@aws-sdk/*'
+
+  S3CompressApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Description: API for S3 Compress service
+      Cors:
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # S3 Event trigger (optional - uncomment to enable)
+  # S3CompressTrigger:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !Ref S3CompressFunction
+  #     Action: lambda:InvokeFunction
+  #     Principal: s3.amazonaws.com
+  #     SourceArn: !Sub 'arn:aws:s3:::${SourceBucket}'
+
+  # CloudWatch Log Group
+  ZipflowFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ZipflowFunction}'
+      RetentionInDays: 7
+
+Outputs:
+  ZipflowFunction:
+    Description: zipflow Lambda Function ARN
+    Value: !GetAtt ZipflowFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'
+
+  ZipflowFunctionIamRole:
+    Description: IAM Role created for zipflow function
+    Value: !GetAtt ZipflowFunctionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionRoleArn'
+
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${S3CompressApi}.execute-api.${AWS::Region}.amazonaws.com/prod/archive'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiEndpoint'
+
+  ApiId:
+    Description: API Gateway ID
+    Value: !Ref S3CompressApi
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiId'
+
