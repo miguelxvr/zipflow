@@ -10,7 +10,6 @@ Multi-provider streaming archiver. Compress files from S3 or local filesystem in
   - 🔜 Microsoft Blob Storage (planned)
   - 🔜 Google Cloud Storage (planned)
 - **Streaming**: Memory-efficient for large files
-- **Local Development**: No AWS credentials required
 - **TypeScript + Node.js 22 LTS**
 
 ## Streaming Flow
