@@ -52,10 +52,9 @@ temp/
 .DS_Store
 Thumbs.db
 
-# Package manager
+# Package manager (keep pnpm-lock.yaml committed!)
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 
 # Results
 results/
