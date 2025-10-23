@@ -54,9 +54,8 @@ The archiver uses Node.js streams to process files without loading them entirely
 # 1. Install dependencies
 pnpm install
 
-# 2. Configure environment
+# 2. Configure environment (uncomment and customize one of the examples)
 cp .env.example .env
-nano .env  # Uncomment and customize one of the examples
 
 # 3. Run
 pnpm start
