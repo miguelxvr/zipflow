@@ -199,29 +199,39 @@ docker compose up -d minio
 docker compose up app
 ```
 
-## AWS Lambda
+## AWS Lambda Deployment (Optional)
 
-### Deploy to AWS
+The `infra/` directory contains an example AWS SAM template for deploying to your own AWS account.
 
-```bash
-sam build -t infra/template.sam.yaml
-sam deploy -t infra/template.sam.yaml --guided
-```
-
-### Test Locally
+### Test Lambda Locally
 
 ```bash
-# Build
+# Build SAM application
 sam build -t infra/template.sam.yaml
 
-# Invoke with test event
+# Invoke locally with test event
 sam local invoke ZipflowFunction \
   -t infra/template.sam.yaml \
   -e infra/events/test-event.json
 
-# Start local API
+# Start local API Gateway
 sam local start-api -t infra/template.sam.yaml
 ```
+
+### Deploy to Your AWS Account
+
+```bash
+# Deploy with guided prompts
+sam deploy -t infra/template.sam.yaml --guided
+
+# This will prompt you for:
+# - Stack name
+# - AWS Region
+# - Confirm changes before deployment
+# - IAM role creation
+```
+
+**Note:** The SAM template is provided as an example. Customize it for your specific use case and security requirements.
 
 ## License
 

@@ -1,7 +1,11 @@
+# Example SAM Template for AWS Lambda Deployment
+# This is a reference implementation. Customize for your specific requirements.
+# See infra/README.md for deployment instructions.
+
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  zipflow - Multi-provider streaming archiver
+  zipflow - Multi-provider streaming archiver (Example Template)
 
 Globals:
   Function:
