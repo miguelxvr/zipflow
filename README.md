@@ -55,84 +55,85 @@ The archiver uses Node.js streams to process files without loading them entirely
 - Node.js 22+
 - pnpm 9+
 
-### Installation
+### Setup
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/miguelxvr/zipflow.git
 cd zipflow
 
-# Install dependencies
+# 2. Install dependencies
 pnpm install
+
+# 3. Build the application
+pnpm build
+
+# 4. Copy and configure environment
+cp .env.example .env
+nano .env  # Edit with your configuration
 ```
 
-### Option 1: Filesystem Provider (Easiest)
+### Example: Filesystem Provider
 
-No AWS credentials or Docker required:
+For local testing without AWS:
 
 ```bash
-# Create test directories
+# Create test directories and files
 mkdir -p storage/input storage/output
-
-# Add some test files
 echo "Test data" > storage/input/test.txt
 
-# Run the archiver
-STORAGE_PROVIDER=filesystem \
-FILESYSTEM_BASE_DIR=./storage \
-SOURCE_CONTAINER=input \
-TARGET_CONTAINER=output \
-TARGET_KEY=archive.zip \
-pnpm dev
+# Configure .env
+cat > .env << 'EOF'
+STORAGE_PROVIDER=filesystem
+FILESYSTEM_BASE_DIR=./storage
+SOURCE_CONTAINER=input
+TARGET_CONTAINER=output
+TARGET_KEY=archive.zip
+COMPRESSION_LEVEL=9
+EOF
 
-# Check the result
+# Run the archiver
+pnpm start
+
+# Verify the result
 ls -lh storage/output/archive.zip
 unzip -l storage/output/archive.zip
 ```
 
-### Option 2: MinIO (Local S3 Testing)
+### Example: MinIO (Local S3)
 
-Test S3 functionality locally:
+For testing S3 functionality locally:
 
 ```bash
-# 1. Copy environment template
-cp .env.example .env
-
-# 2. Start MinIO
+# Start MinIO
 docker compose up -d
 
-# 3. Upload test files
+# Upload test files
 docker run --rm --network zipflow_s3-network \
   -v "$(pwd)/storage/input:/data" \
   --entrypoint=/bin/sh minio/mc:latest -c \
   'mc alias set minio http://minio:9000 minioadmin minioadmin && \
    mc cp /data/test.txt minio/test-bucket/data/test.txt'
 
-# 4. Run the archiver
-STORAGE_PROVIDER=s3 \
-AWS_ENDPOINT_URL=http://localhost:9000 \
-AWS_ACCESS_KEY_ID=minioadmin \
-AWS_SECRET_ACCESS_KEY=minioadmin \
-S3_FORCE_PATH_STYLE=true \
-SOURCE_CONTAINER=test-bucket \
-SOURCE_PREFIX=data/ \
-TARGET_CONTAINER=test-bucket \
-TARGET_KEY=archives/result.zip \
-pnpm dev
+# Configure .env for MinIO
+cat > .env << 'EOF'
+STORAGE_PROVIDER=s3
+AWS_ENDPOINT_URL=http://localhost:9000
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_REGION=us-east-1
+S3_FORCE_PATH_STYLE=true
+SOURCE_CONTAINER=test-bucket
+SOURCE_PREFIX=data/
+TARGET_CONTAINER=test-bucket
+TARGET_KEY=archives/result.zip
+COMPRESSION_LEVEL=9
+EOF
 
-# 5. Access MinIO Console
-# Open http://localhost:9001 (minioadmin/minioadmin)
-```
+# Run the archiver
+pnpm start
 
-### Option 3: Using .env File
-
-```bash
-# Copy and edit environment file
-cp .env.example .env
-nano .env  # or your preferred editor
-
-# Run with environment file
-source .env && pnpm dev
+# Access MinIO Console at http://localhost:9001
 ```
 
 ## Configuration
@@ -182,11 +183,11 @@ TARGET_KEY=archive.zip
 ## Scripts
 
 ```bash
-pnpm dev           # Development mode
 pnpm build         # Build TypeScript
 pnpm start         # Run CLI
 pnpm test          # Run tests
 pnpm lint          # Lint code
+pnpm format        # Format code
 ```
 
 ## Docker
