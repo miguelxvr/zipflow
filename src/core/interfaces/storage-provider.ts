@@ -45,7 +45,14 @@ export interface GetUrlOptions {
 
 /**
  * Abstract storage provider interface
- * Supports multiple storage backends (S3, filesystem, etc.)
+ * 
+ * Currently implemented:
+ * - S3StorageProvider: AWS S3 and S3-compatible storage
+ * - FilesystemStorageProvider: Local filesystem
+ * 
+ * Planned implementations:
+ * - AzureBlobStorageProvider: Microsoft Azure Blob Storage
+ * - GcsStorageProvider: Google Cloud Storage
  */
 export interface StorageProvider {
   /**

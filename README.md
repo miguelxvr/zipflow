@@ -4,7 +4,11 @@ Multi-provider streaming archiver. Compress files from S3 or local filesystem in
 
 ## Features
 
-- **Multi-Provider**: S3, Filesystem (easily extensible)
+- **Multi-Provider Storage**: 
+  - ✅ Local Filesystem (`file://`)
+  - ✅ AWS S3 (`s3://`)
+  - 🔜 Microsoft Blob Storage (planned)
+  - 🔜 Google Cloud Storage (planned)
 - **Streaming**: Memory-efficient for large files
 - **Local Development**: No AWS credentials required
 - **TypeScript + Node.js 22 LTS**
@@ -71,8 +75,16 @@ Just uncomment the example you want and customize the values.
 ## Configuration
 
 Configuration uses **URI schemes** to specify source and target locations:
-- `file://./path` for local filesystem
-- `s3://bucket/path` for AWS S3 or S3-compatible storage
+
+### Supported Providers
+
+| Provider | URI Scheme | Status |
+|----------|------------|--------|
+| Local Filesystem | `file://./path` | ✅ Available |
+| AWS S3 | `s3://bucket/path` | ✅ Available |
+| S3-compatible (MinIO, etc.) | `s3://bucket/path` | ✅ Available |
+| Microsoft Blob Storage | `azure://container/path` | 🔜 Planned |
+| Google Cloud Storage | `gs://bucket/path` | 🔜 Planned |
 
 | Variable | Description | Default |
 |----------|-------------|---------|

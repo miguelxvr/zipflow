@@ -1,17 +1,38 @@
 import { ConfigurationError } from '../types/index.js';
 
 /**
+ * Supported storage schemes
+ * 
+ * Currently supported:
+ * - s3: AWS S3 and S3-compatible storage (MinIO, etc.)
+ * - file: Local filesystem
+ * 
+ * Planned for future:
+ * - azure: Microsoft Blob Storage
+ * - gs: Google Cloud Storage
+ */
+export type StorageScheme = 's3' | 'file';
+
+/**
  * Parsed storage URI
  */
 export interface ParsedUri {
-  scheme: 's3' | 'file';
-  bucket?: string; // For S3
-  path: string; // Key/prefix for S3, file path for filesystem
+  scheme: StorageScheme;
+  bucket?: string; // For S3, Azure Blob, GCS
+  path: string; // Key/prefix for S3, file path for filesystem, blob path for Azure, object path for GCS
   fullPath: string; // Original URI
 }
 
 /**
- * Parse a storage URI (s3://bucket/path or file://./path)
+ * Parse a storage URI
+ * 
+ * Supported formats:
+ * - S3: s3://bucket/path/to/file
+ * - File: file://./path or file:///absolute/path
+ * 
+ * Future support planned for:
+ * - Azure: azure://container/blob/path
+ * - GCS: gs://bucket/path/to/object
  */
 export function parseUri(uri: string): ParsedUri {
   if (!uri) {

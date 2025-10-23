@@ -42,19 +42,27 @@ export interface UploadResult {
 }
 
 /**
+ * Storage scheme type
+ * 
+ * Currently supported: s3, file
+ * Planned: azure (Microsoft Blob), gs (Google Cloud Storage)
+ */
+export type StorageScheme = 's3' | 'file';
+
+/**
  * Configuration for environment variables
  */
 export interface EnvironmentConfig {
   source: {
     uri: string;
-    scheme: 's3' | 'file';
-    bucket?: string; // For S3
+    scheme: StorageScheme;
+    bucket?: string; // For S3, Azure Blob, GCS
     path: string;
   };
   target: {
     uri: string;
-    scheme: 's3' | 'file';
-    bucket?: string; // For S3
+    scheme: StorageScheme;
+    bucket?: string; // For S3, Azure Blob, GCS
     path: string;
   };
   aws: {
