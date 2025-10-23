@@ -50,19 +50,89 @@ The archiver uses Node.js streams to process files without loading them entirely
 
 ## Quick Start
 
+### Prerequisites
+
+- Node.js 22+
+- pnpm 9+
+
+### Installation
+
 ```bash
-# Install
+# Clone the repository
+git clone https://github.com/miguelxvr/zipflow.git
+cd zipflow
+
+# Install dependencies
 pnpm install
+```
 
-# Build
-pnpm build
+### Option 1: Filesystem Provider (Easiest)
 
-# Run with filesystem (no AWS needed)
+No AWS credentials or Docker required:
+
+```bash
+# Create test directories
+mkdir -p storage/input storage/output
+
+# Add some test files
+echo "Test data" > storage/input/test.txt
+
+# Run the archiver
 STORAGE_PROVIDER=filesystem \
+FILESYSTEM_BASE_DIR=./storage \
 SOURCE_CONTAINER=input \
 TARGET_CONTAINER=output \
-TARGET_KEY=backup.zip \
-pnpm start
+TARGET_KEY=archive.zip \
+pnpm dev
+
+# Check the result
+ls -lh storage/output/archive.zip
+unzip -l storage/output/archive.zip
+```
+
+### Option 2: MinIO (Local S3 Testing)
+
+Test S3 functionality locally:
+
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Start MinIO
+docker compose up -d
+
+# 3. Upload test files
+docker run --rm --network zipflow_s3-network \
+  -v "$(pwd)/storage/input:/data" \
+  --entrypoint=/bin/sh minio/mc:latest -c \
+  'mc alias set minio http://minio:9000 minioadmin minioadmin && \
+   mc cp /data/test.txt minio/test-bucket/data/test.txt'
+
+# 4. Run the archiver
+STORAGE_PROVIDER=s3 \
+AWS_ENDPOINT_URL=http://localhost:9000 \
+AWS_ACCESS_KEY_ID=minioadmin \
+AWS_SECRET_ACCESS_KEY=minioadmin \
+S3_FORCE_PATH_STYLE=true \
+SOURCE_CONTAINER=test-bucket \
+SOURCE_PREFIX=data/ \
+TARGET_CONTAINER=test-bucket \
+TARGET_KEY=archives/result.zip \
+pnpm dev
+
+# 5. Access MinIO Console
+# Open http://localhost:9001 (minioadmin/minioadmin)
+```
+
+### Option 3: Using .env File
+
+```bash
+# Copy and edit environment file
+cp .env.example .env
+nano .env  # or your preferred editor
+
+# Run with environment file
+source .env && pnpm dev
 ```
 
 ## Configuration
