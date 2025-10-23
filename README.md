@@ -131,9 +131,26 @@ docker compose up app
 
 ## AWS Lambda
 
+### Deploy to AWS
+
 ```bash
-sam build
-sam deploy --guided
+sam build -t infra/template.sam.yaml
+sam deploy -t infra/template.sam.yaml --guided
+```
+
+### Test Locally
+
+```bash
+# Build
+sam build -t infra/template.sam.yaml
+
+# Invoke with test event
+sam local invoke ZipflowFunction \
+  -t infra/template.sam.yaml \
+  -e infra/events/test-event.json
+
+# Start local API
+sam local start-api -t infra/template.sam.yaml
 ```
 
 ## License
