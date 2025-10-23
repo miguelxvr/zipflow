@@ -1,15 +1,17 @@
 import { z } from 'zod';
 import type { EnvironmentConfig } from '../types/index.js';
 import { ConfigurationError } from '../types/index.js';
+import { parseUri } from '../utils/uri-parser.js';
 
 /**
  * Zod schema for environment variable validation
  */
 const envSchema = z.object({
-  // Storage Provider Configuration
-  STORAGE_PROVIDER: z.enum(['s3', 'filesystem']).default('s3'),
+  // Storage URIs (replaces provider, container, prefix, key)
+  SOURCE_URI: z.string().min(1, 'SOURCE_URI is required'),
+  TARGET_URI: z.string().min(1, 'TARGET_URI is required'),
 
-  // AWS Configuration (for S3 provider)
+  // AWS Configuration (for S3 URIs)
   AWS_REGION: z.string().default('us-east-1'),
   AWS_ENDPOINT_URL: z.string().optional(),
   AWS_ACCESS_KEY_ID: z.string().optional(),
@@ -18,15 +20,6 @@ const envSchema = z.object({
     .string()
     .transform((val) => val === 'true')
     .default('false'),
-
-  // Filesystem Configuration (for filesystem provider)
-  FILESYSTEM_BASE_DIR: z.string().default('./storage'),
-
-  // Storage Configuration (generic naming)
-  SOURCE_CONTAINER: z.string().min(1, 'SOURCE_CONTAINER is required'),
-  SOURCE_PREFIX: z.string().default(''),
-  TARGET_CONTAINER: z.string().min(1, 'TARGET_CONTAINER is required'),
-  TARGET_KEY: z.string().min(1, 'TARGET_KEY is required'),
 
   // Compression Configuration
   COMPRESSION_LEVEL: z
@@ -79,6 +72,17 @@ function parseEnvironment(): EnvSchema {
 export function getConfig(): EnvironmentConfig {
   const env = parseEnvironment();
 
+  // Parse source and target URIs
+  const sourceUri = parseUri(env.SOURCE_URI);
+  const targetUri = parseUri(env.TARGET_URI);
+
+  // Validate that both URIs use compatible schemes
+  if (sourceUri.scheme !== targetUri.scheme) {
+    throw new ConfigurationError(
+      `Source and target must use the same storage type (got ${sourceUri.scheme} and ${targetUri.scheme})`,
+    );
+  }
+
   const awsConfig: EnvironmentConfig['aws'] = {
     region: env.AWS_REGION,
     forcePathStyle: env.S3_FORCE_PATH_STYLE,
@@ -94,20 +98,28 @@ export function getConfig(): EnvironmentConfig {
     awsConfig.secretAccessKey = env.AWS_SECRET_ACCESS_KEY;
   }
 
+  const sourceConfig: EnvironmentConfig['source'] = {
+    uri: sourceUri.fullPath,
+    scheme: sourceUri.scheme,
+    path: sourceUri.path,
+  };
+  if (sourceUri.bucket) {
+    sourceConfig.bucket = sourceUri.bucket;
+  }
+
+  const targetConfig: EnvironmentConfig['target'] = {
+    uri: targetUri.fullPath,
+    scheme: targetUri.scheme,
+    path: targetUri.path,
+  };
+  if (targetUri.bucket) {
+    targetConfig.bucket = targetUri.bucket;
+  }
+
   return {
-    provider: {
-      type: env.STORAGE_PROVIDER,
-    },
+    source: sourceConfig,
+    target: targetConfig,
     aws: awsConfig,
-    filesystem: {
-      baseDir: env.FILESYSTEM_BASE_DIR,
-    },
-    storage: {
-      sourceContainer: env.SOURCE_CONTAINER,
-      sourcePrefix: env.SOURCE_PREFIX,
-      targetContainer: env.TARGET_CONTAINER,
-      targetKey: env.TARGET_KEY,
-    },
     compression: {
       level: env.COMPRESSION_LEVEL,
     },
@@ -133,10 +145,9 @@ export function getConfigWithOverrides(overrides: Partial<EnvironmentConfig>): E
   const baseConfig = getConfig();
 
   return {
-    provider: { ...baseConfig.provider, ...overrides.provider },
+    source: { ...baseConfig.source, ...overrides.source },
+    target: { ...baseConfig.target, ...overrides.target },
     aws: { ...baseConfig.aws, ...overrides.aws },
-    filesystem: { ...baseConfig.filesystem, ...overrides.filesystem },
-    storage: { ...baseConfig.storage, ...overrides.storage },
     compression: { ...baseConfig.compression, ...overrides.compression },
     upload: { ...baseConfig.upload, ...overrides.upload },
   };

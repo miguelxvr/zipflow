@@ -70,46 +70,42 @@ Just uncomment the example you want and customize the values.
 
 ## Configuration
 
+Configuration uses **URI schemes** to specify source and target locations:
+- `file://./path` for local filesystem
+- `s3://bucket/path` for AWS S3 or S3-compatible storage
+
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `STORAGE_PROVIDER` | `s3` or `filesystem` | `s3` |
-| `SOURCE_CONTAINER` | Source bucket/directory | required |
-| `SOURCE_PREFIX` | Filter prefix | `""` |
-| `TARGET_CONTAINER` | Target bucket/directory | required |
-| `TARGET_KEY` | Output file path | required |
-| `COMPRESSION_LEVEL` | 0-9 | `9` |
+| `SOURCE_URI` | Source location URI | required |
+| `TARGET_URI` | Target ZIP file URI | required |
+| `COMPRESSION_LEVEL` | Compression level (0-9) | `9` |
+| `AWS_REGION` | AWS region (for S3) | `us-east-1` |
+| `AWS_ACCESS_KEY_ID` | AWS access key (for S3) | - |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key (for S3) | - |
 
-### S3 Provider
+### Examples
 
+**Filesystem:**
 ```bash
-STORAGE_PROVIDER=s3
+SOURCE_URI=file://./storage/input
+TARGET_URI=file://./storage/output/archive.zip
+```
+
+**AWS S3:**
+```bash
+SOURCE_URI=s3://my-bucket/data/
+TARGET_URI=s3://my-bucket/archives/output.zip
 AWS_REGION=us-east-1
-SOURCE_CONTAINER=my-bucket
-TARGET_CONTAINER=my-bucket
-TARGET_KEY=archive.zip
 ```
 
-### Filesystem Provider
-
+**MinIO:**
 ```bash
-STORAGE_PROVIDER=filesystem
-FILESYSTEM_BASE_DIR=./storage
-SOURCE_CONTAINER=input
-TARGET_CONTAINER=output
-TARGET_KEY=archive.zip
-```
-
-### MinIO (Local S3)
-
-```bash
-STORAGE_PROVIDER=s3
+SOURCE_URI=s3://test-bucket/data/
+TARGET_URI=s3://test-bucket/archives/result.zip
 AWS_ENDPOINT_URL=http://localhost:9000
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin
 S3_FORCE_PATH_STYLE=true
-SOURCE_CONTAINER=test-bucket
-TARGET_CONTAINER=test-bucket
-TARGET_KEY=archive.zip
 ```
 
 ## Scripts

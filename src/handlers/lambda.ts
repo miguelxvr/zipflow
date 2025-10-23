@@ -37,13 +37,23 @@ export async function handler(
       targetKey: archiveEvent.targetKey,
     });
 
+    // Convert bucket/key to URIs
+    const sourceUri = `s3://${archiveEvent.sourceBucket}/${archiveEvent.sourcePrefix}`;
+    const targetUri = `s3://${archiveEvent.targetBucket}/${archiveEvent.targetKey}`;
+
     // Get configuration with event overrides
     const config = getConfigWithOverrides({
-      storage: {
-        sourceContainer: archiveEvent.sourceBucket,
-        sourcePrefix: archiveEvent.sourcePrefix,
-        targetContainer: archiveEvent.targetBucket,
-        targetKey: archiveEvent.targetKey,
+      source: {
+        uri: sourceUri,
+        scheme: 's3' as const,
+        bucket: archiveEvent.sourceBucket,
+        path: archiveEvent.sourcePrefix,
+      },
+      target: {
+        uri: targetUri,
+        scheme: 's3' as const,
+        bucket: archiveEvent.targetBucket,
+        path: archiveEvent.targetKey,
       },
       compression: {
         level: archiveEvent.compressionLevel ?? 9,
@@ -58,17 +68,15 @@ export async function handler(
 
     // Execute archiving operation
     const result = await archiver.archiveFiles({
-      sourceContainer: config.storage.sourceContainer,
-      sourcePrefix: config.storage.sourcePrefix,
-      targetContainer: config.storage.targetContainer,
-      targetKey: config.storage.targetKey,
+      sourceUri: config.source.uri,
+      targetUri: config.target.uri,
       compressionLevel: config.compression.level,
     });
 
     // List objects to get file count
     const objects = await archiver.listObjects(
-      config.storage.sourceContainer,
-      config.storage.sourcePrefix,
+      archiveEvent.sourceBucket,
+      archiveEvent.sourcePrefix,
     );
     const fileCount = objects.filter((obj) => obj.key && !obj.key.endsWith('/')).length;
 
@@ -83,7 +91,7 @@ export async function handler(
       success: true,
       message: `Successfully archived ${fileCount} files`,
       data: {
-        bucket: config.storage.targetContainer,
+        bucket: archiveEvent.targetBucket,
         key: result.key,
         location: result.location,
         fileCount,
@@ -144,8 +152,8 @@ function parseEvent(event: any): ArchiveEvent {
     return {
       sourceBucket: s3Record.bucket.name,
       sourcePrefix: s3Record.object.key,
-      targetBucket: config.storage.targetContainer,
-      targetKey: config.storage.targetKey,
+      targetBucket: config.target.bucket || '',
+      targetKey: config.target.path,
       compressionLevel: config.compression.level,
     };
   }
@@ -165,10 +173,10 @@ function parseEvent(event: any): ArchiveEvent {
   // Fallback to environment variables
   const config = getConfig();
   return {
-    sourceBucket: config.storage.sourceContainer,
-    sourcePrefix: config.storage.sourcePrefix,
-    targetBucket: config.storage.targetContainer,
-    targetKey: config.storage.targetKey,
+    sourceBucket: config.source.bucket || '',
+    sourcePrefix: config.source.path,
+    targetBucket: config.target.bucket || '',
+    targetKey: config.target.path,
     compressionLevel: config.compression.level,
   };
 }

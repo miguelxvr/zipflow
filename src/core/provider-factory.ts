@@ -5,25 +5,25 @@ import type { EnvironmentConfig } from '../types/index.js';
 import type { StorageProvider } from './interfaces/storage-provider.js';
 
 /**
- * Create a storage provider based on configuration
+ * Create a storage provider based on URI scheme
  */
 export function createStorageProvider(config: EnvironmentConfig): StorageProvider {
-  switch (config.provider.type) {
+  const scheme = config.source.scheme;
+
+  switch (scheme) {
     case 's3': {
       console.log('[ProviderFactory] Creating S3 storage provider');
       const s3Client = createS3Client(config.aws);
       return new S3StorageProvider(s3Client);
     }
 
-    case 'filesystem': {
-      console.log(
-        `[ProviderFactory] Creating Filesystem storage provider (base: ${config.filesystem.baseDir})`,
-      );
-      return new FilesystemStorageProvider(config.filesystem.baseDir);
+    case 'file': {
+      console.log('[ProviderFactory] Creating Filesystem storage provider');
+      return new FilesystemStorageProvider();
     }
 
     default: {
-      throw new Error(`Unsupported storage provider: ${config.provider.type}`);
+      throw new Error(`Unsupported storage scheme: ${scheme}`);
     }
   }
 }

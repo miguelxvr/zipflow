@@ -4,10 +4,8 @@ import type { Readable } from 'node:stream';
  * Configuration for archiver operations
  */
 export interface ArchiverConfig {
-  sourceContainer: string;
-  sourcePrefix: string;
-  targetContainer: string;
-  targetKey: string;
+  sourceUri: string;
+  targetUri: string;
   compressionLevel?: number;
 }
 
@@ -58,8 +56,17 @@ export interface UploadResult {
  * Configuration for environment variables
  */
 export interface EnvironmentConfig {
-  provider: {
-    type: 's3' | 'filesystem';
+  source: {
+    uri: string;
+    scheme: 's3' | 'file';
+    bucket?: string; // For S3
+    path: string;
+  };
+  target: {
+    uri: string;
+    scheme: 's3' | 'file';
+    bucket?: string; // For S3
+    path: string;
   };
   aws: {
     region: string;
@@ -67,15 +74,6 @@ export interface EnvironmentConfig {
     accessKeyId?: string;
     secretAccessKey?: string;
     forcePathStyle: boolean;
-  };
-  filesystem: {
-    baseDir: string;
-  };
-  storage: {
-    sourceContainer: string;
-    sourcePrefix: string;
-    targetContainer: string;
-    targetKey: string;
   };
   compression: {
     level: number;

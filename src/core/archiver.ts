@@ -4,6 +4,7 @@ import type { StorageProvider } from '../core/interfaces/storage-provider.js';
 import { createArchiveStream } from '../streams/archive-transform.js';
 import type { ArchiverConfig, UploadResult } from '../types/index.js';
 import { ArchiveError } from '../types/index.js';
+import { parseUri } from '../utils/uri-parser.js';
 
 /**
  * Generic Archiver Service
@@ -13,18 +14,36 @@ export class Archiver {
   constructor(private provider: StorageProvider) {}
 
   /**
-   * Create archive from storage objects and upload to target container
+   * Create archive from storage objects and upload to target
    */
   async archiveFiles(config: ArchiverConfig): Promise<UploadResult & { signedUrl: string }> {
-    const {
-      sourceContainer,
-      sourcePrefix,
-      targetContainer,
-      targetKey,
-      compressionLevel = 9,
-    } = config;
+    const { sourceUri, targetUri, compressionLevel = 9 } = config;
+
+    // Parse URIs
+    const source = parseUri(sourceUri);
+    const target = parseUri(targetUri);
 
     console.log(`[Archiver] Using storage provider: ${this.provider.name}`);
+
+    // For S3: bucket is container, path is prefix/key
+    // For File: use absolute paths - container is base dir, key is relative path
+    let sourceContainer: string;
+    let sourcePrefix: string;
+    let targetContainer: string;
+    let targetKey: string;
+
+    if (source.scheme === 's3') {
+      sourceContainer = source.bucket || '';
+      sourcePrefix = source.path;
+      targetContainer = target.bucket || '';
+      targetKey = target.path;
+    } else {
+      // file:// - use the path as-is (filesystem provider will handle absolute paths)
+      sourceContainer = source.path;
+      sourcePrefix = '';
+      targetContainer = '';
+      targetKey = target.path;
+    }
 
     // List source files
     const objects = await this.provider.listObjects(sourceContainer, {
@@ -32,21 +51,17 @@ export class Archiver {
     });
 
     if (objects.length === 0) {
-      throw new ArchiveError(
-        `${ERROR_MESSAGES.NO_FILES_FOUND} in ${sourceContainer}/${sourcePrefix}`,
-      );
+      throw new ArchiveError(`${ERROR_MESSAGES.NO_FILES_FOUND} in ${sourceUri}`);
     }
 
     // Filter out directories (keys ending with /)
     const files = objects.filter((obj) => obj.key && !obj.key.endsWith('/'));
 
     if (files.length === 0) {
-      throw new ArchiveError(
-        `${ERROR_MESSAGES.NO_FILES_FOUND} (only directories) in ${sourceContainer}/${sourcePrefix}`,
-      );
+      throw new ArchiveError(`${ERROR_MESSAGES.NO_FILES_FOUND} (only directories) in ${sourceUri}`);
     }
 
-    console.log(`[Archiver] Archiving ${files.length} files to ${targetKey}`);
+    console.log(`[Archiver] Archiving ${files.length} files to ${targetUri}`);
 
     // Create archive stream
     const archive = createArchiveStream(compressionLevel);

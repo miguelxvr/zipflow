@@ -21,18 +21,16 @@ async function main(): Promise<void> {
     const config = getConfig();
 
     console.log(`${LOG_PREFIX.CLI} Configuration:`);
-    console.log(`  Storage Provider: ${config.provider.type.toUpperCase()}`);
-    console.log(`  Source: ${config.storage.sourceContainer}/${config.storage.sourcePrefix}`);
-    console.log(`  Target: ${config.storage.targetContainer}/${config.storage.targetKey}`);
+    console.log(`  Storage Type: ${config.source.scheme.toUpperCase()}`);
+    console.log(`  Source: ${config.source.uri}`);
+    console.log(`  Target: ${config.target.uri}`);
     console.log(`  Compression Level: ${config.compression.level}`);
 
-    if (config.provider.type === 's3') {
+    if (config.source.scheme === 's3') {
       console.log(`  AWS Region: ${config.aws.region}`);
       if (config.aws.endpoint) {
         console.log(`  Custom Endpoint: ${config.aws.endpoint} (MinIO mode)`);
       }
-    } else if (config.provider.type === 'filesystem') {
-      console.log(`  Base Directory: ${config.filesystem.baseDir}`);
     }
     console.log('');
 
@@ -50,10 +48,8 @@ async function main(): Promise<void> {
     const startTime = Date.now();
 
     const result = await archiver.archiveFiles({
-      sourceContainer: config.storage.sourceContainer,
-      sourcePrefix: config.storage.sourcePrefix,
-      targetContainer: config.storage.targetContainer,
-      targetKey: config.storage.targetKey,
+      sourceUri: config.source.uri,
+      targetUri: config.target.uri,
       compressionLevel: config.compression.level,
     });
 

@@ -18,16 +18,16 @@ import { StorageOperationError } from '../../types/index.js';
 /**
  * Filesystem Storage Provider
  * Implements storage operations using local filesystem
+ * Paths are absolute and come directly from file:// URIs
  */
 export class FilesystemStorageProvider implements StorageProvider {
   readonly name = 'Filesystem';
 
-  constructor(private baseDir: string) {
-    this.baseDir = resolve(baseDir);
-  }
+  constructor() {}
 
   private getFullPath(container: string, key = ''): string {
-    return resolve(this.baseDir, container, key);
+    // Container and key are absolute paths from file:// URIs
+    return key ? resolve(container, key) : resolve(container);
   }
 
   async listObjects(container: string, options?: ListObjectsOptions): Promise<StorageObject[]> {
